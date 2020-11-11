@@ -5,44 +5,29 @@ open Fable.Remoting.Giraffe
 open Saturn
 
 open Shared
-
-type Storage () =
-    let todos = ResizeArray<_>()
-
-    member __.GetTodos () =
-        List.ofSeq todos
-
-    member __.AddTodo (todo: Todo) =
-        if Todo.isValid todo.Description then
-            todos.Add todo
-            Ok ()
-        else Error "Invalid todo"
-
-let storage = Storage()
+open Microsoft.ML
+open Microsoft.ML.Data
 
 type Prediction () =
+    let context = MLContext()
+
+    let (model, _) = context.Model.Load("./MLModel/salary-model.zip")
+
+    let predictionEngine = context.Model.CreatePredictionEngine<SalaryInput, SalaryPrediction>(model)
+
     member __.PredictSalary yearsOfExperience =
-        let predictedSalary = 0.0f
+        let predictedSalary = predictionEngine.Predict { YearsExperience = yearsOfExperience; Salary = 0.0f }
 
         predictedSalary
 
 let prediction = Prediction()
-        
-let todosApi =
-    { getTodos = fun () -> async { return storage.GetTodos() }
-      addTodo =
-        fun todo -> async {
-            match storage.AddTodo todo with
-            | Ok () -> return todo
-            | Error e -> return failwith e
-        } }
 
 let predictionApi = { getSalaryPrediction =
     fun yearsOfExperience -> async {
         let prediction = prediction.PredictSalary yearsOfExperience
         match prediction with
-        | p when p > 0.0f -> return 0.0f
-        | _ -> return 1.0f
+        | p when p.PredictedSalary > 0.0f -> return p.PredictedSalary.ToString("C")
+        | _ -> return "0"
     } }
 
 let webApp =

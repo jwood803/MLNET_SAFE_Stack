@@ -6,12 +6,12 @@ open Shared
 
 type Model =
     { Input: string
-      PredictedSalary: float32 }
+      PredictedSalary: string }
 
 type Msg =
     | SetInput of string
     | PredictSalary
-    | PredictedSalary of float32
+    | PredictedSalary of string
 
 let predictionApi =
     Remoting.createApi()
@@ -21,7 +21,7 @@ let predictionApi =
 let init(): Model * Cmd<Msg> =
     let model =
         { Input = ""
-          PredictedSalary = 0f }
+          PredictedSalary = "" }
     model, Cmd.none
 
 let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
@@ -42,7 +42,7 @@ open Fulma
 let containerBox (model : Model) (dispatch : Msg -> unit) =
     Box.box' [ ] [
         Content.content [ ] [
-            div [ ] [ label [ ] [ if model.PredictedSalary > 0f then sprintf "Predicted salary: %f" model.PredictedSalary |> str ]]
+            div [ ] [ label [ ] [ if not (System.String.IsNullOrWhiteSpace model.PredictedSalary) then sprintf "Predicted salary: %s" model.PredictedSalary |> str ]]
         ]
         Field.div [ Field.IsGrouped ] [
             Control.p [ Control.IsExpanded ] [

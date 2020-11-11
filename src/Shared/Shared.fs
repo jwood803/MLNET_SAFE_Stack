@@ -1,13 +1,22 @@
 namespace Shared
 
 open System
+open Microsoft.ML.Data
 
 type Todo =
     { Id : Guid
       Description : string }
 
-type SalaryInput = { YearsOfExperience: float32 }
-type SalaryPrediction = { PredictedSalary: float32 }
+type SalaryInput = {
+    YearsExperience: float32
+    Salary: float32
+}
+
+[<CLIMutable>]
+type SalaryPrediction = {
+    [<ColumnName("Score")>]
+    PredictedSalary: float32
+}
 
 module Todo =
     let isValid (description: string) =
@@ -25,4 +34,4 @@ type ITodosApi =
     { getTodos : unit -> Async<Todo list>
       addTodo : Todo -> Async<Todo> }
 
-type ISalaryPrediction = { getSalaryPrediction: float32 -> Async<float32> }
+type ISalaryPrediction = { getSalaryPrediction: float32 -> Async<string> }
